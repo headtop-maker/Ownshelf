@@ -4,7 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 import { Text, useTheme } from '@/shared/ui';
-import { usePcUpload } from './usePcUpload';
+import { usePcUpload } from './hooks/usePcUpload';
 
 type Props = { visible: boolean; onClose: () => void };
 

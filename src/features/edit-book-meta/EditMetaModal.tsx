@@ -7,7 +7,7 @@ import { useAppDispatch } from '@/app-store';
 import { updateBookMeta, type Book } from '@/entities/book';
 import { pruneBookCovers } from '@/shared/lib/bookStorage';
 import { ActionSheet, BottomSheet, Button, familyForWeight, Text, useTheme } from '@/shared/ui';
-import { useBookCoverEditor } from './useBookCoverEditor';
+import { useBookCoverEditor } from './hooks/useBookCoverEditor';
 
 type Props = {
   book: Book;

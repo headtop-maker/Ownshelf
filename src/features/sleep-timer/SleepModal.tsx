@@ -2,7 +2,7 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SLEEP_OPTIONS } from '@/shared/config/constants';
 import { Text, usePlayerTheme } from '@/shared/ui';
-import { useSleepTimer } from './useSleepTimer';
+import { useSleepTimer } from './hooks/useSleepTimer';
 
 type Props = { visible: boolean; onClose: () => void };
 

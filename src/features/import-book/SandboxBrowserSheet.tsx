@@ -4,7 +4,7 @@ import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, View } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isImageFile } from '@/shared/lib/files';
 import { Button, Checkbox, Text, useTheme } from '@/shared/ui';
-import { useSandboxBrowser } from './useSandboxBrowser';
+import { useSandboxBrowser } from './hooks/useSandboxBrowser';
 
 type Props = { visible: boolean; onClose: () => void };
 

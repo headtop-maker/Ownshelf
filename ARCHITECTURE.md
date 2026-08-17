@@ -54,15 +54,15 @@
 
 ### `features/` — пользовательские сценарии (логика + при необходимости UI сценария)
 - **`import-book/`**
-  - `buildBook.ts` — **чистая сборка `Book`** из набора файлов: сортировка глав (натуральная), обложка из
+  - `lib/buildBook.ts` — **чистая сборка `Book`** из набора файлов: сортировка глав (натуральная), обложка из
     image-файла, при `copyToSandbox` — копирование в `documentDirectory/books/<id>/` (новый FS API `File/Directory/Paths`).
     `deleteBookFiles(id)` — удаление папки книги.
-  - `useImportBook.ts` — хук с двумя сценариями: `importFiles()` (`File.pickFileAsync` из `expo-file-system`,
+  - `hooks/useImportBook.ts` — хук с двумя сценариями: `importFiles()` (`File.pickFileAsync` из `expo-file-system`,
     мультивыбор; на iOS — копия в песочницу, на Android — только путь, `copyToSandbox: false`, `source:
     'android-pick'`, доступ держится persistable URI permission, которую пикер берёт сам) и `importFolder()`
     (Android SAF `Directory.pickDirectoryAsync`, без копии). Диспатчит `addBook`. **Не** `expo-document-picker` —
     он на Android не берёт persistable-разрешение, см. «Жёсткие правила» в AGENTS.md.
-  - `sandboxFs.ts` / `useSandboxBrowser.ts` / `SandboxBrowserSheet.tsx` — браузер файлов **песочницы
+  - `lib/sandboxFs.ts` / `hooks/useSandboxBrowser.ts` / `SandboxBrowserSheet.tsx` — браузер файлов **песочницы
     приложения**: третий источник импорта, для файлов, уже лежащих в `documentDirectory` (например, залитых
     вручную через adb), а не выбранных через системный пикер. `listSandboxDir(dir, knownBookIds)` отдаёт
     подпапки/файлы одного уровня, **скрывая** подпапки, чьё имя совпадает с id уже существующей книги (не
@@ -76,7 +76,7 @@
     троттлинг сохранения прогресса (5с), авто-переход в конце главы, срабатывание sleep-таймера.
     Наружу отдаёт контекст `usePlayer()` с действиями.
 - **`sleep-timer/`**
-  - `useSleepTimer.ts` — установка таймера (`setMinutes` / `setEndOfChapter` / `cancel`). Само выключение делает PlayerProvider.
+  - `hooks/useSleepTimer.ts` — установка таймера (`setMinutes` / `setEndOfChapter` / `cancel`). Само выключение делает PlayerProvider.
   - `SleepModal.tsx` — UI выбора таймера (тёмный, поверх плеера).
 - **`edit-book-meta/`**
   - `EditMetaModal.tsx` — правка названия/автора **и обложки** (фото с камеры / из галереи / удалить,
@@ -86,7 +86,7 @@
     из одного файла, которые из библиотеки открываются сразу в плеере, минуя `BookDetailsPage`.
 - **`pc-upload/`** — приём книг с ПК по Wi-Fi (Android-only). См. подробный разбор в разделе
   [«Загрузка с ПК»](#pc-upload) ниже.
-  - `usePcUpload.ts` — хук: старт/стоп нативного сервера на mount/unmount, подписка на его события,
+  - `hooks/usePcUpload.ts` — хук: старт/стоп нативного сервера на mount/unmount, подписка на его события,
     прогон готовых сабмитов через `buildBook()`/`addBook()` (тот же путь, что и обычный импорт).
   - `PcUploadSheet.tsx` — полноэкранная модалка: IP/PIN/QR, живой лог принятых книг, блокировка без Wi-Fi.
 
@@ -127,7 +127,7 @@
 - **`lib/format.ts`** — `formatTime` (m:ss / h:mm:ss), `formatDurationHuman`, `formatBytes` (128 КБ/1.2 МБ/3.4 ГБ).
 - **`lib/bookStorage.ts`** — единственное место, которое знает путь `documentDirectory/books/<id>/` в песочнице:
   `booksDir()`, `bookDir(id)`, `saveBookCover(id, sourceUri)` (копирует+заменяет `cover.*`), `deleteBookCover(id)`,
-  `bookDirSize(id)` (байты, через нативный `Directory.size`). `buildBook.ts` (импорт) и `EditMetaModal` (обложка)
+  `bookDirSize(id)` (байты, через нативный `Directory.size`). `lib/buildBook.ts` (импорт) и `EditMetaModal` (обложка)
   используют один и тот же хелпер — не заводить второй.
 - **`lib/coverGradient.ts`** — детерминированный градиент по id книги (для обложек без картинки).
 - **`ui/`** — UI-кит на голом `StyleSheet` (без Tamagui/NativeWind), дизайн-система **«Modernist»**:
@@ -179,7 +179,7 @@ modules/pc-upload-server/
       java/expo/modules/pcuploadserver/PcUploadServerModule.kt
 
 src/features/pc-upload/
-  usePcUpload.ts                  — хук: старт/стоп на mount/unmount, подписка на события, buildBook()/addBook()
+  hooks/usePcUpload.ts            — хук: старт/стоп на mount/unmount, подписка на события, buildBook()/addBook()
   PcUploadSheet.tsx                — полноэкранная модалка: IP/PIN/QR, живой лог, блокировка без Wi-Fi
 ```
 
@@ -266,7 +266,7 @@ source: 'android-upload' })` → `dispatch(addBook(book))`. На unmount — `st
 - **Локскрин требует `interruptionMode: 'doNotMix'`** — уже выставлено в `configureSession()`.
 - `resetTransient()` обязан вызываться на старте, иначе `status: 'playing'` «оживёт» из persist без реального звука.
 - **`modules/pc-upload-server` не знает про Redux/книги** — только байты + события. Сборка `Book` — исключительно
-  через `buildBook()` в JS (`features/pc-upload/usePcUpload.ts`), как и у обычного импорта.
+  через `buildBook()` в JS (`features/pc-upload/hooks/usePcUpload.ts`), как и у обычного импорта.
 - **Плеер (`NowPlaying`/`PlayerBar`/шиты плеера) всегда тёмный** — `usePlayerTheme()`, не `useTheme()`. Светлые
   экраны (библиотека, карточка книги, настройки) — наоборот, только `useTheme()`.
 - Пути к файлам книги в песочнице — только через `shared/lib/bookStorage.ts`, не создавать параллельный
@@ -282,7 +282,7 @@ source: 'android-upload' })` → `dispatch(addBook(book))`. На unmount — `st
   импортируют `@/widgets/book-card`, `@/widgets/chapter-list`) — переиспользование готового композита
   (обложка, список глав), а не слоистое нарушение; импорт всегда через баррель, никогда напрямую во
   внутренний файл.
-- **`feature` импортирует другую `feature`** (`features/pc-upload/usePcUpload.ts` переиспользует `buildBook`
+- **`feature` импортирует другую `feature`** (`features/pc-upload/hooks/usePcUpload.ts` переиспользует `buildBook`
   из `@/features/import-book`, см. [«Загрузка с ПК»](#pc-upload)) — сознательно, чтобы не дублировать сборку
   `Book` в двух местах.
 - **`entities` ↔ `app-store` — типовая (не рантайм) циклическая зависимость**: `app-store/store.ts` импортирует

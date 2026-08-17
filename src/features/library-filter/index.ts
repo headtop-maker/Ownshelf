@@ -4,4 +4,4 @@ export {
   type LibraryFilter,
   type LibrarySort,
   type LibrarySection,
-} from './useLibraryFilter';
+} from './hooks/useLibraryFilter';

@@ -4,7 +4,7 @@ import { Alert, Platform } from 'react-native';
 import { addBook } from '@/entities/book';
 import { useAppDispatch } from '@/app-store';
 import { isAudioFile } from '@/shared/lib/files';
-import { buildBook, type SourceAsset } from './buildBook';
+import { buildBook, type SourceAsset } from '../lib/buildBook';
 
 /**
  * Импорт книги.

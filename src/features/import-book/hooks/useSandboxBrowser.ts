@@ -3,8 +3,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/app-store';
 import { addBook, selectBooks } from '@/entities/book';
-import { buildBook, type SourceAsset } from './buildBook';
-import { listSandboxDir, type SandboxListing } from './sandboxFs';
+import { buildBook, type SourceAsset } from '../lib/buildBook';
+import { listSandboxDir, type SandboxListing } from '../lib/sandboxFs';
 
 /**
  * Браузер файлов песочницы приложения: навигация по папкам + накопление выбора аудио/картинок
