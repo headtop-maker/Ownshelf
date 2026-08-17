@@ -10,6 +10,8 @@ export type SettingsState = {
   theme: ThemePref;
   /** Продолжать с последней позиции при повторном открытии книги. */
   autoResume: boolean;
+  /** Экран онбординга показан один раз при первом запуске. */
+  onboardingSeen: boolean;
 };
 
 const initialState: SettingsState = {
@@ -18,6 +20,7 @@ const initialState: SettingsState = {
   defaultSleepMinutes: 15,
   theme: 'system',
   autoResume: true,
+  onboardingSeen: false,
 };
 
 const settingsSlice = createSlice({
@@ -39,6 +42,9 @@ const settingsSlice = createSlice({
     setAutoResume(state, action: PayloadAction<boolean>) {
       state.autoResume = action.payload;
     },
+    setOnboardingSeen(state, action: PayloadAction<boolean>) {
+      state.onboardingSeen = action.payload;
+    },
   },
 });
 
@@ -48,6 +54,7 @@ export const {
   setDefaultSleepMinutes,
   setTheme,
   setAutoResume,
+  setOnboardingSeen,
 } = settingsSlice.actions;
 
 export const settingsReducer = settingsSlice.reducer;
