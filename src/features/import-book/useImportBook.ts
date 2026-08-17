@@ -73,7 +73,12 @@ export function useImportBook() {
       dispatch(addBook(book));
       return book;
     } catch (e) {
-      Alert.alert('Ошибка импорта папки', String(e instanceof Error ? e.message : e));
+      // Directory.pickDirectoryAsync() (в отличие от File.pickFileAsync) не возвращает
+      // { canceled: true } — при отмене пикера пользователем реджектит промис с ERR_PICKER_CANCELLED
+      // (см. expo-file-system/android PickerCancelledException). Это не ошибка — молча выходим.
+      if ((e as { code?: string } | null)?.code !== 'ERR_PICKER_CANCELLED') {
+        Alert.alert('Ошибка импорта папки', String(e instanceof Error ? e.message : e));
+      }
       return null;
     } finally {
       setBusy(false);
