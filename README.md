@@ -1,56 +1,64 @@
-# Welcome to your Expo app 👋
+# 🎧 Ownshelf
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Офлайн-плеер аудиокниг из локальных файлов. **Без бэкенда, аккаунтов и интернета** — всё хранится на устройстве.
+Импортируешь файлы или папку с книгой, слушаешь, приложение помнит, где ты остановился в каждом файле.
 
-## Get started
+## Возможности
 
-1. Install dependencies
+- 🔊 **Воспроизведение в фоне и с локскрина.** Аудио продолжает играть при свёрнутом приложении и погашенном
+  экране; управление (play/pause, перемотка) — прямо из системного медиа-уведомления и с экрана блокировки.
+- 📂 **Импорт с устройства.** Выбор отдельных аудиофайлов (включая `mp4`) или целой папки-книги (Android —
+  через системный выбор папки SAF). Обложка подхватывается из картинки рядом с файлами.
+- 📶 **Загрузка с ПК по Wi-Fi (Android).** Локальный HTTP-сервер прямо на телефоне: открываешь адрес (или
+  сканируешь QR) в браузере ПК/другого телефона, вводишь PIN, перетаскиваешь папку или файлы — книга появляется
+  в библиотеке сразу после передачи. Подробности реализации — в [ARCHITECTURE.md](ARCHITECTURE.md#pc-upload).
+- 🗂 **Файлы в песочнице.** Браузер по внутреннему хранилищу приложения — для файлов, которые оказались там
+  не через обычный импорт (например, залиты вручную). Листаешь папки, отмечаешь аудио/картинки — собирается
+  книга, как при обычном импорте.
+- 🧹 **Управление хранилищем.** В настройках — список всех книг с их весом на диске и точечное удаление
+  нескольких сразу, чтобы освободить место без полного сброса библиотеки.
+- 🖼 **Своя обложка.** Фото с камеры или из галереи — для любой книги, включая книги из одного файла
+  (карандаш прямо на карточке в сетке).
+- 📑 **Прогресс по каждому файлу.** Позиция сохраняется отдельно для каждой главы — прыжки между файлами не
+  затирают друг друга. На экране книги видно, где остановился, и подсвечен последний открытый файл.
+- ⏱ **Гибкое управление.** Скорость по пресетам (0.75×–2×), перемотка ±10/15/30/45/60 c, таймер сна
+  (на N минут или до конца главы).
+- 🎨 **Дизайн-система «Modernist».** Светлый ground, единственный красный акцент, гротеск Golos Text, тёмный
+  полноэкранный плеер независимо от темы приложения.
+- 🌗 **Темы.** Системная / светлая / тёмная — применяется ко всем экранам (кроме плеера — он всегда тёмный).
+- 💾 **Полностью офлайн.** Ни аккаунтов, ни облака, ни аналитики — данные не покидают устройство (загрузка
+  с ПК — тоже локальная сеть, без интернета и внешних серверов).
 
-   ```bash
-   npm install
-   ```
+## Стек
 
-2. Start the app
+Expo SDK 57 · React Native 0.86 · React 19 · expo-router · Redux Toolkit + redux-persist (AsyncStorage) ·
+expo-audio · expo-image-picker · react-native-svg · react-native-qrcode-svg. Архитектура — **Feature-Sliced Design**
+(`shared → entities → features → widgets → pages → app`). UI — голый `StyleSheet` с токенами темы, без UI-фреймворков.
+Один локальный нативный Expo Module (`modules/pc-upload-server`, Kotlin, Android-only) — HTTP-сервер приёма файлов.
 
-   ```bash
-   npx expo start
-   ```
+## Запуск
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+> Нужен **dev build** (не Expo Go — используются нативные плагины `expo-audio`). Node 20.19+/22.13+/24.3+ (не 23).
 
 ```bash
-npm run reset-project
+npm install
+npx expo run:android   # или: npx expo run:ios
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Проверка без устройства
 
-### Other setup steps
+```bash
+npx tsc --noEmit -p tsconfig.json   # типы
+npx expo lint                       # линт (ESLint закреплён на 8.57, см. AGENTS.md)
+npx expo export --platform ios      # сборка бандла
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Документация
 
-## Learn more
+- [AGENTS.md](AGENTS.md) — правила и инварианты проекта (читать перед правками).
+- [ARCHITECTURE.md](ARCHITECTURE.md) — карта кода, ответственность файлов, потоки данных.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Статус
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MVP. Вне текущего объёма (v2): главы внутри `.m4b`, ID3-теги и встроенные обложки, закладки, онбординг,
+отдельный экран поиска, share-extension, импорт по URL, синхронизация между устройствами, загрузка с ПК на iOS.
