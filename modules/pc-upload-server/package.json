@@ -1,0 +1,14 @@
+{
+  "name": "pc-upload-server",
+  "version": "0.1.0",
+  "description": "Local HTTP server for receiving audiobook files from a PC over Wi-Fi",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "MIT",
+  "author": "Audiobooks",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Загрузка книг — Аудиокниги</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px; min-height: 100vh;
+    background: #FBFAF9; color: #262322;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  h1 {
+    font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0;
+    margin: 0 0 4px;
+  }
+  p.sub { color: rgba(38,35,34,0.5); font-size: 13px; margin: 0 0 24px; }
+  .card {
+    background: #F2F0EE; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+  label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #EC3013; margin-bottom: 8px; }
+  input[type="text"], input[type="tel"] {
+    width: 100%; font-size: 20px; letter-spacing: 0.3em; text-align: center;
+    padding: 12px; border-radius: 8px; border: 1px solid rgba(38,35,34,0.18);
+    background: #FBFAF9; color: #262322;
+  }
+  button {
+    appearance: none; border: none; cursor: pointer;
+    background: #EC3013; color: #FBFAF9; font-weight: 800; text-transform: uppercase;
+    font-size: 14px; padding: 14px 16px; border-radius: 8px; width: 100%; margin-top: 12px;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.secondary { background: transparent; color: #262322; border: 1px solid rgba(38,35,34,0.18); }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    flex: 1; text-align: center; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid rgba(38,35,34,0.18); cursor: pointer;
+    background: #FBFAF9; color: rgba(38,35,34,0.5);
+  }
+  .tab.active { background: #EC3013; border-color: #EC3013; color: #FBFAF9; }
+  .drop {
+    border: 1px dashed rgba(38,35,34,0.28); border-radius: 8px; padding: 28px 16px; text-align: center;
+    font-size: 13px; color: rgba(38,35,34,0.5); margin-bottom: 12px;
+  }
+  .picked { font-size: 12.5px; font-weight: 600; margin-top: 8px; word-break: break-word; }
+  .hidden { display: none !important; }
+  #error { color: #AE1800; font-size: 12.5px; font-weight: 600; margin-top: 10px; min-height: 16px; }
+  .log { margin-top: 16px; }
+  .log-item {
+    display: flex; justify-content: space-between; gap: 8px; padding: 12px 0;
+    border-bottom: 1px solid rgba(38,35,34,0.09); font-size: 12.5px;
+  }
+  .log-item .name { font-weight: 700; }
+  .log-item .meta { color: rgba(38,35,34,0.5); font-size: 11px; }
+  .badge-ok { color: #AE1800; font-weight: 800; font-size: 10.5px; text-transform: uppercase; }
+  .spinner {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(38,35,34,0.18);
+    border-top-color: #EC3013; display: inline-block; animation: spin 0.7s linear infinite; vertical-align: -2px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Аудиокниги · Загрузка с ПК</h1>
+  <p class="sub">Файлы летят напрямую на телефон по локальной сети.</p>
+
+  <div id="loginCard" class="card">
+    <label for="pin">PIN с экрана телефона</label>
+    <input id="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off" />
+    <div id="error"></div>
+    <button id="loginBtn">Войти</button>
+  </div>
+
+  <div id="uploadCard" class="card hidden">
+    <div class="tabs">
+      <div class="tab active" data-kind="folder">Папка</div>
+      <div class="tab" data-kind="files">Файлы</div>
+    </div>
+
+    <div class="drop" id="dropLabel">Выберите папку с книгой</div>
+    <input id="fileInput" type="file" webkitdirectory directory multiple />
+    <div id="picked" class="picked"></div>
+
+    <button id="submitBtn" disabled>Загрузить</button>
+    <div id="uploadError"></div>
+
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var token = null;
+  var kind = 'folder';
+  var qsPin = new URLSearchParams(location.search).get('pin');
+
+  var loginCard = document.getElementById('loginCard');
+  var uploadCard = document.getElementById('uploadCard');
+  var pinInput = document.getElementById('pin');
+  var errorEl = document.getElementById('error');
+  var loginBtn = document.getElementById('loginBtn');
+  var fileInput = document.getElementById('fileInput');
+  var picked = document.getElementById('picked');
+  var submitBtn = document.getElementById('submitBtn');
+  var uploadError = document.getElementById('uploadError');
+  var log = document.getElementById('log');
+  var dropLabel = document.getElementById('dropLabel');
+  var tabs = document.querySelectorAll('.tab');
+
+  function setKind(next) {
+    kind = next;
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.kind === next); });
+    if (next === 'folder') {
+      fileInput.setAttribute('webkitdirectory', '');
+      fileInput.setAttribute('directory', '');
+      dropLabel.textContent = 'Выберите папку с книгой';
+    } else {
+      fileInput.removeAttribute('webkitdirectory');
+      fileInput.removeAttribute('directory');
+      dropLabel.textContent = 'Выберите один или несколько файлов';
+    }
+    fileInput.value = '';
+    picked.textContent = '';
+    submitBtn.disabled = true;
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { setKind(t.dataset.kind); }); });
+  dropLabel.addEventListener('click', function () { fileInput.click(); });
+
+  fileInput.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(fileInput.files);
+    submitBtn.disabled = files.length === 0;
+    picked.textContent = files.length
+      ? files.length + ' файл(ов) выбрано'
+      : '';
+  });
+
+  function doLogin(pin) {
+    errorEl.textContent = '';
+    loginBtn.disabled = true;
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'pin=' + encodeURIComponent(pin),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        loginBtn.disabled = false;
+        if (!res.ok) { errorEl.textContent = 'Неверный PIN'; return; }
+        token = res.j.token;
+        loginCard.classList.add('hidden');
+        uploadCard.classList.remove('hidden');
+      })
+      .catch(function () {
+        loginBtn.disabled = false;
+        errorEl.textContent = 'Нет связи с телефоном';
+      });
+  }
+
+  loginBtn.addEventListener('click', function () { doLogin(pinInput.value.trim()); });
+  pinInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(pinInput.value.trim()); });
+
+  if (qsPin) { pinInput.value = qsPin; doLogin(qsPin); }
+
+  submitBtn.addEventListener('click', function () {
+    var files = Array.prototype.slice.call(fileInput.files);
+    if (!files.length) return;
+    uploadError.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span> Загрузка…';
+
+    var fd = new FormData();
+    fd.append('token', token);
+    fd.append('kind', kind);
+    // Имена шлём ещё и percent-encoded отдельным ASCII-полем: сервер (NanoHTTPD) без явного
+    // charset в Content-Type декодирует multipart-заголовки/значения как US-ASCII, и кириллица
+    // необратимо превращается в "?" ещё при разборе — так это не долетает даже до сервера.
+    if (kind === 'folder' && files[0].webkitRelativePath) {
+      fd.append('title', encodeURIComponent(files[0].webkitRelativePath.split('/')[0]));
+    }
+    files.forEach(function (f, i) {
+      fd.append('file' + i, f, f.name);
+      fd.append('name' + i, encodeURIComponent(f.name));
+    });
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload');
+    xhr.onload = function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Загрузить';
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var item = document.createElement('div');
+        item.className = 'log-item';
+        var title = (kind === 'folder' && files[0].webkitRelativePath)
+          ? files[0].webkitRelativePath.split('/')[0]
+          : files[0].name;
+        item.innerHTML = '<div><div class="name">' + escapeHtml(title) + '</div>' +
+          '<div class="meta">' + files.length + ' файл(ов)</div></div>' +
+          '<div class="badge-ok">Отправлено ✓</div>';
+        log.prepend(item);
+        fileInput.value = '';
+        picked.textContent = '';
+        submitBtn.disabled = true;
+      } else {
+        uploadError.textContent = 'Ошибка загрузки (' + xhr.status + ')';
+        submitBtn.disabled = false;
+      }
+    };
+    xhr.onerror = function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Загрузить';
+      uploadError.textContent = 'Обрыв соединения — попробуйте ещё раз';
+    };
+    xhr.send(fd);
+  });
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+})();
+</script>
+</body>
+</html>

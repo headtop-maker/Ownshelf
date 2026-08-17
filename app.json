@@ -1,16 +1,19 @@
 {
   "expo": {
-    "name": "books",
-    "slug": "books",
+    "name": "Ownshelf",
+    "slug": "ownshelf",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "books",
+    "scheme": "ownshelf",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.ownshelf.app",
+      "supportsTablet": true
     },
     "android": {
+      "package": "com.ownshelf.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -31,6 +34,21 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Приложению нужен доступ к галерее, чтобы выбрать обложку книги.",
+          "cameraPermission": "Приложению нужен доступ к камере, чтобы сфотографировать обложку книги."
         }
       ]
     ],
