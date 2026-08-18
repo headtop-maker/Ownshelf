@@ -64,7 +64,7 @@ export function NowPlaying({ onOpenSleep }: Props) {
         <Pressable hitSlop={10} onPress={() => router.back()}>
           <Feather name="chevron-down" size={26} color={P.text} />
         </Pressable>
-        <View style={styles.topTitle}>
+        <View style={styles.topTitle} pointerEvents="none">
           <Text variant="kicker" color={P.accentLine} numberOfLines={1} style={styles.center}>
             Файл {String(chapterIndex + 1).padStart(2, '0')} из {book.chapters.length}
           </Text>
@@ -74,12 +74,16 @@ export function NowPlaying({ onOpenSleep }: Props) {
         </View>
         <Pressable
           hitSlop={10}
+          style={styles.closeBtn}
           onPress={() => {
             player.closePlayer();
             router.back();
           }}
         >
-          <Feather name="x" size={26} color={P.text} />
+          <Text variant="navLabel" color={P.text}>
+            Закрыть
+          </Text>
+          <Feather name="x" size={22} color={P.text} />
         </Pressable>
       </View>
 
@@ -168,8 +172,17 @@ export function NowPlaying({ onOpenSleep }: Props) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center', textAlign: 'center' },
-  topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 12 },
-  topTitle: { flex: 1, paddingHorizontal: 8, gap: 2 },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    paddingBottom: 12,
+    position: 'relative',
+  },
+  // Абсолютный центр по всей ширине шапки — иначе из-за разной ширины chevron/«Закрыть» заголовок съезжает.
+  topTitle: { position: 'absolute', left: 100, right: 100, top: 0, bottom: 0, justifyContent: 'center', gap: 2 },
+  closeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   coverWrap: { overflow: 'hidden', borderBottomLeftRadius: 18, borderBottomRightRadius: 18 },
   eq: { position: 'absolute', right: 16, bottom: 14 },
   body: { flex: 1, paddingTop: 20 },

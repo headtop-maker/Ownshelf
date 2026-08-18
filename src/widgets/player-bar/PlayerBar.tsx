@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSelector } from '@/app-store';
@@ -62,6 +62,16 @@ export function PlayerBar() {
 
   const [translateX] = useState(() => new Animated.Value(0));
 
+  // На случай если предыдущая сессия закрылась свайпом (translateX уехал за экран) — сбросить
+  // при старте новой, иначе бар после переоткрытия книги останется невидимым (тот же компонент
+  // не размонтируется между сессиями, стейт translateX переживает закрытие).
+  const wasIdle = useRef(true);
+  useEffect(() => {
+    const isIdle = pb.status === 'idle';
+    if (wasIdle.current && !isIdle) translateX.setValue(0);
+    wasIdle.current = isIdle;
+  }, [pb.status, translateX]);
+
   const responder = useMemo(
     () =>
       PanResponder.create({
@@ -70,9 +80,11 @@ export function PlayerBar() {
         onPanResponderRelease: (_e, g) => {
           if (Math.abs(g.dx) > DISMISS_THRESHOLD) {
             const dir = g.dx > 0 ? 1 : -1;
-            Animated.timing(translateX, { toValue: dir * width, duration: 180, useNativeDriver: true }).start(() =>
-              player.closePlayer(),
-            );
+            // Закрываем сразу, не дожидаясь колбэка анимации: колбэк .start() после жеста
+            // не всегда доезжает (баг — аудио оставалось играть, хотя бар уезжал за экран).
+            // Анимация ниже — чисто визуальная, для плавного ухода бара.
+            player.closePlayer();
+            Animated.timing(translateX, { toValue: dir * width, duration: 180, useNativeDriver: true }).start();
           } else {
             Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
           }
